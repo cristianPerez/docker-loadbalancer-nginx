@@ -1,0 +1,255 @@
+Imágenes:
+Forma de distribuir nuestras aplicaciones,
+para que todo el equipo pueda utilizar el
+mismo environment.
+
+>> docker pull redis
+
+Una imagen es un conjunto de capas
+cada capa es inmutable.
+
+listar imagenes:
+>> docker image ls
+
+Especificar la version, antes de descargar
+una imagen.
+
+Si hay varias imagenes que comparten capas
+docker solo trae las capas nuevas y las
+otras las reutiliza.
+
+Repositorio de imágenes.
+https://hub.docker.com/
+
+Dockerfile:
+Es la reseta que utiliza docker para crear
+imágenes.
+
+Construyendo imágenes:
+
+>> docker build -t ubuntu:platzi .
+-t -> nombre de la imagen que voy a usar.
+. -> es el path, de donde saco el contexto
+  => de build
+
+Publicar una imagen 
+
+>> docker push ubuntu:platzi
+no me deja hacerlo por que no tengo
+  => permisos.
+
+para poder subir la imagen hay que
+  => hacer un tag
+
+Creando un tag:
+>> docker tag ubuntu:platzi cperez354/ubuntu:platzi
+>> docker push cperez354/ubuntu:platzi
+
+Comprendiendo capas del sistema:
+Conocer como esta construida una imagen:
+
+>> docker history ubuntu:platzi
+
+para ver una mejor foto de tu imágen
+  => usamos dive:
+  => https://github.com/wagoodman/dive
+
+>> brew install dive
+
+Corriendo dive
+>> dive ubuntu:platzi
+Mirada en varias vista de como esta construida
+  => la imagen en sus distintas capas.
+
+puedo navegar con las flechas en capas.
+con tab paso a la vista de archivos.
+CTRL + U -> me saca solo los archivos que
+  => fueron modificados
+
+Colocamos la version de node que queremos
+>> FROM node:10
+
+Como actualizar mi contenedor sin buildear
+la imagen.
+
+cambiamos el comando por:
+CMD ["npx", "nodemon", "index.js"]
+
+eliminar imagenes sin uso
+>> docker rmi $(docker images -q)
+
+
+Utilizando volumenes para que la actualizacion de datos
+en mi maquina se vea reflejada en el contenedor, sin
+tener que buildiarlo de nuevo.
+>> docker run -d --name app -p 3000:3000 --env MONGO_URL=mongodb://db:27017/test -v /Users/cristian/Documents/Platzi/Docker/docker:/usr/src platziapp
+
+------------------------------------------------------
+
+Redes virtuales para conectar contenedores:
+
+Ver que redes tenemos
+>> docker network ls
+
+Creando una nueva red virtual
+>> docker network create --attachable platzinet
+  => --attachable significa que otros
+  => contenedores puedan conectarse a la red.
+
+Creamos el contenedor de mongo
+>> docker run -d --name db mongo
+
+Conectamos el contenedor a la rede
+>> docker network connect platzinet db
+
+Revisamos que contenedores estan conectados
+a la net de platzinet.
+>> docker network inspect platzinet
+
+si dos contenedores estan en la misma red
+pueden utilizar el name como hostname.
+
+>> docker run -d --name app -p 3000:3000 --env MONGO_URL=mongodb://db:27017/test platziapp
+
+Ahora solo conectamos el nuevo contenedor
+a la red para que hable con mongo:
+
+>> docker network connect platzinet app
+
+Asi pasamos variables de entorno, y conectamos los dos
+contenedores atravez de la network llamada platzinet:
+>> docker run -d --name db mongo
+>> docker network connect platzinet db
+>> docker run -d --name app -p 3000:3000 --env MONGO_URL=mongodb://db:27017/test -v /Users/cristian/Documents/Platzi/Docker/docker:/usr/src platziapp
+>> docker network connect platzinet app
+
+Eliminar todos los contenedores
+>> docker rm -f $(docker ps -aq)
+
+Eliminamos la red
+>> docker network rm platzinet
+
+-----------------------------------------
+Dockerfile > descripcion imperativa.
+
+Docker compose:
+Es una herramienta que nos permite describir
+de forma declarativa la arquitectura de
+nuestra app.
+
+version: "3" -> recomendado usar la ultima
+
+services: -> la abstraccion de cada
+  => contenedor es un servicio
+
+Diferencia entre contenedor y un sercicio
+es que un servicio puede tener mas de un
+contendor.
+
+comandos de docker compose:
+>> docker-compose up -d
+  => -d significa detach me quiero desatachar
+  => del output
+
+Para mirar el estado de docker-compose
+>> docker-compose ps
+
+Ver los logs de un servicio
+>> docker-compose logs app
+
+Para entrar a un contendor
+>> docker-compose exec app bash
+
+Para eliminar todo lo de docker-compose o
+bajarlo:
+>> docker-compose down
+
+Ahora cambiamos para hacer nuestro propio build
+de una imagen en el docker compose file esto.
+
+    # Esta linea buildea con una imagen ya creada.
+    #image: platziapp
+    
+    # Esta linea buildea desde nuestro path .
+    build: .
+
+Corremos el comando build
+>> docker-compose build
+Se crea una nueva imagen.
+
+Ahora corremos todo con
+>> docker-compose up -d
+Si la imagen no estaba buildeada docker lo hace
+  => por nosotros.
+
+Hacemos un follow de las dependencias
+>> docker-compose logs -f app
+
+Compartimos el codigo por medio de volumenes
+# Agradamos esta instruccion para compartir el codigo.
+    volumes:
+      - .:/usr/src # Significa la conexion
+      - /usr/src/node_modules # no necesitamos sobre escribir los node_modules
+
+Escalando los contenedores:
+>> docker-compose scale app=4
+
+Saca error por que solo hay un puerto 3000
+  => en mi maquina
+
+Lanzamos el comando para lanzar el compose
+>> docker-compose up -d
+
+Docker avanzado:
+Usar el .dockerignore par avitar agrandar
+la imagen sin necesidad
+
+Multistages builds:
+Para correr solo el de development
+>>docker build -t platziapp -f build/development.Dockerfile .
+  => -f le indicamos de donde va a tomar
+  => la configuracion de la imágen.
+
+Entro en la imagen
+>> docker run --rm -it platziapp bash
+
+Docker in Docker
+Para correr docker dentro de un contenedor
+usamos la imagen de docker.
+
+>>docker run -it --rm -v /var/run/docker.sock:/var/run/docker.sock docker
+  => con el sock conectamos el socket de mi
+  => maquina local con el socket del contenedor.
+  => -it significa modo interactivo, para
+  => entrar en el contenedor una vez esta
+  => corriendo.
+
+el -it pretende ser interactivo, si tiene un input y un output attachado.
+  => Una forma de mandar datos del estandar input,
+  => y una forma de devolver datos del estandar output.
+
+>> docker run -it ubuntu
+Quiero que corras el comando que sea el entry point de la imagen ubuntu
+pero quiero que lo hagas en mi terminal.
+
+Quiero que mi standar input y standard output sean los del comando
+  => que vas a correr.
+
+Esta practica es muy recomendada para
+integracion continua.
+
+para correr dive dentro de un contenedor con docker
+
+>> docker run --rm -it \
+-v /var/run/docker.sock:/var/run/docker.sock \
+-v $(which docker):/bin/docker \
+wagoodman/dive:latest platziapp
+
+Eliminar todas las imagenes
+>> docker rm -f $(docker ps -aq)
+
+Eliminar todos los volumenes
+>> docker volume rm $(docker volume ls -qf dangling=true)
+
+
+

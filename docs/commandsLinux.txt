@@ -1,0 +1,10 @@
+Linux commands 
+
+>> uname -a => Dice las especificaciones
+  => del sistema.
+>> cat /etc/lsb-release => Muestra la data
+  => del linux que esta corriendo.
+>> exit => cierra el proceso de linux, no
+  => exita mas el proceso.
+>>  ps -fea => Muestra todos los procesos
+  => del sistema.

@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
     if (err) {
       res.status(500).send('💥 BOOM 💥: ' + err);
     } else {
-      res.send('Me conecté a la DB! 😎🐳🐳');
+      res.send('I got connection to DB! 😎🐳🐳');
       db.close();
     }
   });

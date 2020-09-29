@@ -1,114 +1,143 @@
 🐳🐳🐳🐳🐳 Docker basics 🐳🐳🐳🐳🐳🐳
 
 >> docker ps
-  => Estado de contenedores docker en ejecución
+=> EN
+  => You can see the state of running containers.
+=> ES
+  => Estado de contenedores docker en ejecución.
+
 >> docker ps -a
+=> EN
+  => You can see the state of running containers and not running containers.
+=> ES
   => El estado de contenedores incluyendo los que no estan en ejecución.
+
 >> docker inspect [id] or [name]
+=> EN
+  => Shows the metadata in a specific container by id.
+  => Really important in development if you want to see the env vars.
+=> ES
   => Muestra la metada del contenedor.
   => Muy importante al desarrollar y querer por ejemplo obtener un variable de entorno.
+
 >> docker inspect -f '{{ json .Config.Env }}' [id] or [name]
+=> EN
+  => Filtered metadata and parsed to json.
+  => The filter format is in GO, Docker was made in GO.
+=> ES
   => Metadata filtrada y parseada a json
   => El formato del filtro es Go, docker esta hecho en Go.
   => json significa el format que le quiero hacer.
   => El .Config.Env significa las variables que busco.
+
 >> docker rename [old_name] [new_name]
+=> EN
+  => Rename a container.
+=> ES
   => Renombra un contenedor
+
 >> docker run --name [new_name] [imagen]
+=> EN
+  => Rename and run the container.
+  => The flag --mame allow us to change the starting name.
+=> ES
   => Renombra y corre la imagen hello-world
   => La bandera --name nos permite colocar un nombre de entrada.
->> docker logs [id] or [name] => logs
->> docker logs hola-mundo => Muestra los logs no ejecuta de nuevo el contenedor.
->> docker rm [id] or [name] => Elimina un contenedor
->> docker ps -aq => Muestra unicamente los ids de los contenedores
->> docker rm $(docker ps -aq) => Elimina una lista de contenedores por id
+
+>> docker logs [id] or [name]
+=> EN
+  => Showing the logs by container's id or name.
+  => Show logs does not exec egaint the container.
+
+>> docker logs hola-mundo
+  => ES
+  => Muestra los logs pero no ejecuta de nuevo el contenedor.
+
+>> docker rm [id] or [name]
+=> EN
+  => It deletes a container by name or id.
+  => ES
+  => Elimina un contenedor
+
+>> docker ps -aq
+=> EN
+  => It only shows the containe's ids.
+=> ES
+  => Muestra unicamente los ids de los contenedores.
+
+>> docker rm $(docker ps -aq)
+=> EN
+  => You can delete all containers in bash.
+=> ES
+  => Elimina una lista de contenedores por id
 
 >> docker run ubuntu
-    => se descarga la imagen de ubuntu.
-    => solo corrio /bin/bash
+=> EN
+  => It only download the ubuntu image from dockerhub.
+  => After that just ran /bin/bash
+=> ES
+  => se descarga la imagen de ubuntu.
+  => solo corrio /bin/bash
 
 >> docker run -it ubuntu
+=> EN
+  => -it allow us to comunicate our bash terminal with the container's terminal.
+  => -it minds interactive terminal. 
+=> ES
   => -it Me deja la terminar del contenedor abierta en mi bash.
   => Ahora quedamos en ubuntu.
 
+🐳🐳🐳🐳🐳
+Live cycle in containers:
 Ciclo de vida de un contenedor:
+🐳🐳🐳🐳🐳
 
-Crear un contenedor que no se apague
 >> docker run ubuntu tail -f /dev/null
+=> EN
+  => Create a container widthout shoutdown.
+=> ES
+  => Crear un contenedor que no se apague.
 
-Un contenedor solo se apaga si su comando
+>> docker rm -f [id container]
+=> EN
+  => One container just shitdown if:
+  => The user root is broken or it finished the work to done.
+=> ES
+  => Un contenedor solo se apaga si su comando
   => root deja de funcionar o termina lo
   => que debia hacer.
 
 >> docker run -d --name server nginx
+=> EN
+  => The flag -d minds detach terminal.
+=> ES
   => Decimos --detach(-d) si esto tiene
   => output, no quiero estar atachado a el.
 
--p 8080:80 significa publisher
-  => sirve para publicar un puerto de mi
+>> docker run -d --name server -p 8080:80 nginx
+=> EN
+  => The flag -p minds publisher.
+  => It help us to publish one port in our machine and connect it with
+  => the another container's port.
+  => 8080 port in my host.
+  => 80 port in my container.
+=> ES
+  => La bandera -p Significa publisher
+  => Sirve para publicar un puerto de mi
   => maquina y conectarlo con el del contenedor
   => 8080 significa mi host
   => 80 significa el puesto del contenedor
 
-Si corremos localhost:8080 en el navegador
+=> EN
+  => If we run localhost:8080 in the browser.
+  => We can see our nginx.
+=> ES
+  => Si corremos localhost:8080 en el navegador
   => podremos ver nuestro nginx
 
-Corriendo una base de datos:
 >> docker run -d --name db mongo
-
-vemos los logs >> dockerlogs db
->> docker exec -it db bash
-
-Persistir datos con docker:
-
- DOCKER BIND MOUNT:
- Como crear un contenedor con datos
- compartidos del sistema de archivos del
- host que no es del contenedor:
-
- Creamos un folder con mkdir antes de correr
- el contenedor.
-
->> docker run --name db -d -v /Users/cristian/Documents/Platzi/Docker/Basics/mongodata:/data/db mongo
-  => con el anterior comando compartimos los datos
-  => que guarda mongo y los guardamos en el host.
-  => para que no se pierdan cuando eliminamos el
-  => container.
-
-DOCKER VOLUMES:
-Es la evolucion del bind mount, asi podemos
-persistir data de una forma segura, sin
-que procesos de nuestro computador afecten
-dicha data.
-
-Para ver los volumenes montados
->> docker volume ls
-  => Eliminar volumenes
->> docker volume prune
-  => Liberar memoria.
-
-Creamos un volumen para la db data de mongo
->> docker volume create dbdata
-
-Ahora asignamos el dbdata a un destino en el
-  => contenedor.
->> docker run -d --name db --mount src=dbdata,dst=/data/db mongo
-
-Con los volumes podemos persistir data en un
-s3 si queremos, o en alguna otra parte remota.
-https://docs.docker.com/storage/
-
-Copiar archivos desde una imagen al host
->> docker cp 6f4b7dd3d07e:/etc/nginx/conf.d/default.conf ./defaultremote.conf
-  => 6f4b7dd3d07e -> es el id del contenedor
-  => :-> despues de los : la ubicación del archivo a copiar
-  => la siguiente ruta es donde lo almacenamos en el host
-
-corriendo nginx:
-
->> docker run -d --name lb -p 8080:80 -v /Users/cristian/Documents/Platzi/Docker/docker/nginx.conf:/etc/nginx/conf.d/default.conf:ro nginx
->> docker run -d --name lb -p 8080:80 -v nginx
-
-
-
+=> EN
+  => Running a database.
+=> ES
+  Corriendo una base de datos.
 

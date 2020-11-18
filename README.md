@@ -1,6 +1,6 @@
 # Docker basics.
 
-We are gogint to create a load balancer with multiple containers and one network.
+We are going to create a load balancer with multiple containers and one network.
 
 We are using nginx.
 
